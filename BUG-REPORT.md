@@ -41,3 +41,17 @@ order.updateQuantity('123', 5); // Only the first object is updated
 
 5. Reasoning/Discovery Process: I found the mismatch between .push() (allows duplicates) and .find() (returns only the first match) highlighted a structural flaw.
 
+## Bug 4: Edge Case - Negative Order Totals
+1. Location: calculateTotal method.
+
+2. Description: There is no boundary check when applying a coupon. If the discountAmount of a coupon is greater than the order's subtotal (after volume discounts), the afterVolumeDiscount variable goes negative, leading to a negative final order total (the company mathematically "owes" the customer money).
+
+3. Reproduction: following ths code
+const order = new OrderProcessor();
+order.addLineItem({ sku: '123', unitPrice: 10, quantity: 1 });
+order.applyCoupon({ code: 'PROMO', discountAmount: 50 });
+const totals = order.calculateTotal(); // total will be -40.
+
+4. Severity: Major. in my experience with E-commerce platforms/proyects should floor order totals at $0.00 to prevent payout exploitation.
+
+5. Reasoning/Discovery Process: Discovered through exploratory edge-case analysis, specifically questioning what happens when fixed-dollar subtractions exceed the current balance.
