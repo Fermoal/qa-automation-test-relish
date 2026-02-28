@@ -26,3 +26,18 @@ order.applyCoupon({ code: 'HALF', discountAmount: 50 }); // Tax should now be ba
 
 5. Reasoning/Discovery Process: Discovered by mapping the documented Business Rules against the sequential execution of calculateTotal. Noticed a temporal visual mismatch where totalTax is finalized before couponDiscount is even evaluated.
 
+## Bug 3: Logical Inconsistency - Duplicate SKUs Handling
+1. Location: addLineItem vs updateQuantity methods.
+
+2. Description: addLineItem uses .push() without checking if the SKU already exists. If we add twice, the array will have two identical SKUs. However, updateQuantity uses .find(), which only updates the first occurrence. This leads to a duplicated item that cannot be updated.
+
+3. Reproduction: i chcked with this code and i thought "what if"
+const order = new OrderProcessor();
+order.addLineItem({ sku: '123', unitPrice: 10, quantity: 1 });
+order.addLineItem({ sku: '123', unitPrice: 10, quantity: 1 }); // Array now has length 2
+order.updateQuantity('123', 5); // Only the first object is updated
+
+4. Severity: Medium. Causes desynchronization in the cart.
+
+5. Reasoning/Discovery Process: I found the mismatch between .push() (allows duplicates) and .find() (returns only the first match) highlighted a structural flaw.
+
