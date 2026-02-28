@@ -55,3 +55,17 @@ const totals = order.calculateTotal(); // total will be -40.
 4. Severity: Major. in my experience with E-commerce platforms/proyects should floor order totals at $0.00 to prevent payout exploitation.
 
 5. Reasoning/Discovery Process: Discovered through exploratory edge-case analysis, specifically questioning what happens when fixed-dollar subtractions exceed the current balance.
+
+## Bug 5: Edge Case - Lack of Validation for Negative/Zero Quantities
+1. Location: addLineItem and updateQuantity methods.
+
+2. Description: The methods blindly accept zero or negative numbers for quantity. A user could add an item with -5 quantity, which would invert the pricing logic, create negative subtotals, and corrupt the getVolumeDiscountPercent tiers.
+
+3. Reproduction:
+const order = new OrderProcessor();
+order.addLineItem({ sku: '123', unitPrice: 100, quantity: -2 });
+// System accepts it, leading to a subtotal of -200.
+
+4. Severity: Major. Allows data corruption and potentially exploitable cart logic.
+
+5. Reasoning/Discovery Process: I found by evaluating input boundaries. In an automation mindset, inputs should never be trusted, and testing negative/null boundaries on numerical inputs is standard practice.
