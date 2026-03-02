@@ -69,3 +69,27 @@ order.addLineItem({ sku: '123', unitPrice: 100, quantity: -2 });
 4. Severity: Major. Allows data corruption and potentially exploitable cart logic.
 
 5. Reasoning/Discovery Process: I found by evaluating input boundaries. In an automation mindset, inputs should never be trusted, and testing negative/null boundaries on numerical inputs is standard practice.
+
+## Bug 6: Edge Case - Unhandled Zero-Price Items leading to Math Errors
+- **1. Location:** `calculateTotal` and `addLineItem` methods.
+- **2. Description:** The system allows adding items with a `$0.00` unit price ( free promotional items). However, the logic does not safely handle orders where the total subtotal is exactly zero. In advanced implementations where coupons or taxes are distributed proportionally, a zero subtotal causes a division-by-zero scenario, resulting in `NaN` (Not a Number) propagating through the financial totals.
+- **3. Reproduction:**
+  const order = new OrderProcessor();
+  order.addLineItem({ sku: 'FREE-GIFT', unitPrice: 0, quantity: 1, taxRate: 0.1 });
+  // If proportional math is applied without safeguards, total becomes NaN.
+
+4. Severity: Medium. While orders with only free items are rare, generating NaN breaks the UI and downstream payment gateways.
+
+5. Reasoning/Discovery Process: Discovered by applying Boundary Value Analysis on the unitPrice input. Testing the absolute minimum boundary ($0.00) revealed the lack of mathematical safeguards for zero-division in logic.
+
+## Bug 7: Edge Case - Volume Tiers Vulnerable
+1. Location: getVolumeDiscountPercent and addLineItem methods.
+
+2. Description: The volume discount tiers (10, 25, 50, 100) rely entirely on getTotalItemCount(). Because addLineItem lacks input type validation, passing a string for quantity (e.g., "10") causes string concatenation (0 + "10" = "010"), breaking the numerical tier logic. Additionally, fractional quantities (e.g., 10.5) are accepted, which is invalid for discrete physical items and can trigger incorrect discount brackets.
+
+3. Reproduction: i following this logic
+const order = new OrderProcessor();
+order.addLineItem({ sku: '123', unitPrice: 10, quantity: "50" });
+4. Severity: Medium. Exposes the discount engine to exploitation if the frontend fails to sanitize inputs.
+
+5. Reasoning/Discovery Process: testing on the discount thresholds. In JavaScript, trusting numerical boundaries without strict type checking (typeof quantity === 'number') or integer validation (Number.isInteger()) is a critical structural flaw (I wanted to know more about this took some more time just courious).
