@@ -105,7 +105,7 @@ this.calculateTotal = function () {
       const lineSubtotal = item.unitPrice * item.quantity;
       subtotal += lineSubtotal;
       const discountedLineSubtotal = lineSubtotal * (1 -
-volumeDiscountPercent / 100);
+      volumeDiscountPercent / 100);
       totalTax += discountedLineSubtotal * item.taxRate;
     });
 
@@ -178,7 +178,7 @@ submitted: "processing",
     Usage example of the OrderProcessor object and its elements
 */
 // Create a new order and add line items
-let order = new OrderProcessor();
+/*let order = new OrderProcessor();
 order.addLineItem({ sku: "WIDGET-A", unitPrice: 12.99, quantity: 5,
 taxRate: 0.08 });
 order.addLineItem({ sku: "WIDGET-B", unitPrice: 24.50, quantity: 3,
@@ -196,3 +196,6 @@ console.log("Rush order:", order.calculateTotal());
 // Advance status
 order.advanceStatus();
 console.log("Status:", order.status);
+*/
+
+module.exports = OrderProcessor;
